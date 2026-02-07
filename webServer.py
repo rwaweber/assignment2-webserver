@@ -21,11 +21,15 @@ import sys
 # (data data data data data ...)
 
 
+# TODO must be encoded back to bytes
 NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\r\n"
 
-# TODO must be encoded back to bytes
+
+
 OK_RESPONSE_HEADER = "HTTP/1.1 200 OK\r\n"
-HTML_CONTENT_TYPE = "Content-Type: text/html; charset=UTF-8\r\n"
+HTML_CONTENT_TYPE  = "Content-Type: text/html; charset=UTF-8\r\n"
+SERVER_HEADER      = "Server: rww8018-assignment2-server\r\n"
+CLOSE_HEADER       = "Connection: close\r\n"
 
 def webServer(port=13331):
   serverSocket = socket(AF_INET, SOCK_STREAM)
@@ -67,12 +71,18 @@ def webServer(port=13331):
         print("file found")
         response += OK_RESPONSE_HEADER
         response += HTML_CONTENT_TYPE
+        response += SERVER_HEADER
+        response += CLOSE_HEADER
+        # TODO do we need content-length?
+
         response += "\r\n"
         response += data
         response += "\r\n"
       except FileNotFoundError as e:
         print("file not found")
-        response = NOT_FOUND_RESPONSE
+        response += NOT_FOUND_RESPONSE
+        response += SERVER_HEADER
+        response += CLOSE_HEADER
 
       # remember to byte-ify response
       connectionSocket.sendall(bytes(response, "UTF-8"))
