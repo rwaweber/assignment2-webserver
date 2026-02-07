@@ -3,65 +3,85 @@ from socket import *
 # In order to terminate the program
 import sys
 
+# Request format
+# GET /somedir/page.html HTTP/1.1
+# Host: www.someschool.edu
+# Connection: close
+# User-agent: Mozilla/5.0
+# Accept-language: fr
 
+# Response format
+# HTTP/1.1 200 OK
+# Connection: close
+# Date: Tue, 18 Aug 2015 15:44:04 GMT
+# Server: Apache/2.2.3 (CentOS)
+# Last-Modified: Tue, 18 Aug 2015 15:11:03 GMT
+# Content-Length: 6821
+# Content-Type: text/html
+# (data data data data data ...)
+
+
+NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\r\n"
+
+# TODO must be encoded back to bytes
+OK_RESPONSE_HEADER = "HTTP/1.1 200 OK\r\n"
+HTML_CONTENT_TYPE = "Content-Type: text/html; charset=UTF-8\r\n"
 
 def webServer(port=13331):
   serverSocket = socket(AF_INET, SOCK_STREAM)
 
   #Prepare a server socket
-  serverSocket.bind(("", port))
+  serverSocket.bind(("127.0.0.1", port))
 
-  #Fill in start
-
-  #Fill in end
+  serverSocket.listen()
 
   while True:
     #Establish the connection
 
-    print('Ready to serve...')
-    connectionSocket, addr = #Fill in start -are you accepting connections?     #Fill in end
+    print(f"Ready to serve... on: http://localhost:{port}")
+    connectionSocket, addr = serverSocket.accept()
 
     try:
-      message = #Fill in start -a client is sending you a message   #Fill in end
-      filename = message.split()[1]
+      # read in request
+      message = connectionSocket.recv(1024)
 
-      #opens the client requested file.
-      #Plenty of guidance online on how to open and read a file in python. How should you read it though if you plan on sending it through a socket?
-      f = open(filename[1:],     #fill in start              #fill in end   )
+      # split request lines
+      lines = message.decode("UTF-8").split("\r\n")
+      (method, URL, version) = lines[0].split()
 
-      #This variable can store the headers you want to send for any valid or invalid request.   What header should be sent for a response that is ok?
-      #Fill in start
-      #Content-Type is an example on how to send a header as bytes. There are more!
-      outputdata = b"Content-Type: text/html; charset=UTF-8\r\n"
+      # log request
+      print(f"{method}\t{URL}\t{version}")
 
+      # start building request
+      response = ""
 
-      #Note that a complete header must end with a blank line, creating the four-byte sequence "\r\n\r\n" Refer to https://w3.cs.jmu.edu/kirkpams/OpenCSF/Books/csf/html/TCPSockets.html
-      #Fill in end
+      # last header line should be skipped according to spec
+      # TODO do stuff with these? could easily be turned into a map if
+      # we wanted to handle these
+      header_lines = lines[1:-2]
 
-      for i in f: #for line in file
-      #Fill in start - append your html file contents #Fill in end
+      data = None
+      try:
+        with open(f"./{URL}", "r") as f:
+          data = f.read()
+        print("file found")
+        response += OK_RESPONSE_HEADER
+        response += HTML_CONTENT_TYPE
+        response += "\r\n"
+        response += data
+        response += "\r\n"
+      except FileNotFoundError as e:
+        print("file not found")
+        response = NOT_FOUND_RESPONSE
 
-      #Send the content of the requested file to the client (don't forget the headers you created)!
-      #Send everything as one send command, do not send one line/item at a time!
+      # remember to byte-ify response
+      connectionSocket.sendall(bytes(response, "UTF-8"))
+      # close connecting socket
+      connectionSocket.close()
 
-      # Fill in start
-
-
-      # Fill in end
-      connectionSocket.close() #closing the connection socket
-
+    # handle all other exceptions loudly
     except Exception as e:
-      # Send response message for invalid request due to the file not being found (404)
-      # Remember the format you used in the try: block!
-      #Fill in start
-
-      #Fill in end
-
-
-      #Close client socket
-      #Fill in start
-
-      #Fill in end
+      raise(e)
 
   # Commenting out the below (some use it for local testing). It is not required for Gradescope, and some students have moved it erroneously in the While loop.
   # DO NOT PLACE ANYWHERE ELSE AND DO NOT UNCOMMENT WHEN SUBMITTING, YOU ARE GONNA HAVE A BAD TIME
