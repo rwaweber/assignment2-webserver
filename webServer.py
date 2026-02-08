@@ -1,7 +1,5 @@
 # import socket module
-from socket import *
-# In order to terminate the program
-import sys
+import socket
 
 # Request format
 # GET /somedir/page.html HTTP/1.1
@@ -22,17 +20,14 @@ import sys
 
 
 # TODO must be encoded back to bytes
-NOT_FOUND_RESPONSE = "HTTP/1.1 404 Not Found\r\n"
-
-
-
-OK_RESPONSE_HEADER = "HTTP/1.1 200 OK\r\n"
-HTML_CONTENT_TYPE  = "Content-Type: text/html; charset=UTF-8\r\n"
-SERVER_HEADER      = "Server: rww8018-assignment2-server\r\n"
-CLOSE_HEADER       = "Connection: close\r\n"
+NOT_FOUND_RESPONSE        = "HTTP/1.1 404 Not Found\r\n"
+OK_RESPONSE_HEADER        = "HTTP/1.1 200 OK\r\n"
+HTML_CONTENT_TYPE_HEADER  = "Content-Type: text/html; charset=UTF-8\r\n"
+SERVER_HEADER             = "Server: rww8018-assignment2-server\r\n"
+CLOSE_HEADER              = "Connection: close\r\n"
 
 def webServer(port=13331):
-  serverSocket = socket(AF_INET, SOCK_STREAM)
+  serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
   #Prepare a server socket
   serverSocket.bind(("127.0.0.1", port))
@@ -43,7 +38,7 @@ def webServer(port=13331):
     #Establish the connection
 
     print(f"Ready to serve... on: http://localhost:{port}")
-    connectionSocket, addr = serverSocket.accept()
+    connectionSocket, _ = serverSocket.accept()
 
     try:
       # read in request
@@ -62,7 +57,7 @@ def webServer(port=13331):
       # last header line should be skipped according to spec
       # TODO do stuff with these? could easily be turned into a map if
       # we wanted to handle these
-      header_lines = lines[1:-2]
+      # _header_lines = lines[1:-2]
 
       data = None
       try:
@@ -70,7 +65,7 @@ def webServer(port=13331):
           data = f.read()
         print("file found")
         response += OK_RESPONSE_HEADER
-        response += HTML_CONTENT_TYPE
+        response += HTML_CONTENT_TYPE_HEADER
         response += SERVER_HEADER
         response += CLOSE_HEADER
         # TODO do we need content-length?
@@ -78,7 +73,7 @@ def webServer(port=13331):
         response += "\r\n"
         response += data
         response += "\r\n"
-      except FileNotFoundError as e:
+      except FileNotFoundError as _:
         print("file not found")
         response += NOT_FOUND_RESPONSE
         response += SERVER_HEADER
